@@ -2,7 +2,7 @@
 
 1. Клонируйте репозиторий:
    ```bash
-   git clone <URL_репозитория>
+   git clone [<URL_репозитория>](https://github.com/MadBlackAkur0k/STOP.git)
 
 2. Перейдите в папку с проектом:
    ```bash

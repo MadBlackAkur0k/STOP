@@ -53,10 +53,10 @@ class DatabaseApp:
         self.button_select = tk.Button(master, text="Select Data", command=self.select_data)
         self.button_select.grid(row=8, column=0, columnspan=2)
 
-        self.button_insert_all = tk.Button(master, text="Insert Records", command=self.insert_all)
+        self.button_insert_all = tk.Button(master, text="Insert Records", command=self.insert_records)
         self.button_insert_all.grid(row=9, column=0, columnspan=2)
 
-        self.button_update = tk.Button(master, text="Update Records", command=self.update)
+        self.button_update = tk.Button(master, text="Update Records", command=self.update_records)
         self.button_update.grid(row=10, column=0, columnspan=2)
 
         self.button_delete_specific = tk.Button(master, text="Delete Specific Records", command=self.delete_specific)
@@ -85,6 +85,19 @@ class DatabaseApp:
             messagebox.showerror("Connection Error", str(e))
             return None
 
+    def show_tables(self):
+        conn = self.connect_db()
+        if conn:
+            cur = conn.cursor()
+            self.output_area.delete(1.0, tk.END)  # Очистка текстового поля перед выводом новой информации
+            cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+            tables = cur.fetchall()
+            self.output_area.insert(tk.END, "List of tables:\n")
+            for table in tables:
+                self.output_area.insert(tk.END, f"{table[0]}\n")
+            cur.close()
+            conn.close()
+
     def show_table_schema(self):
         conn = self.connect_db()
         if conn:
@@ -111,22 +124,46 @@ class DatabaseApp:
                 cur.close()
                 conn.close()
 
-    def insert_all(self):
+    def insert_records(self):
         conn = self.connect_db()
         if conn:
             cur = conn.cursor()
             fake = Faker()
+            table_name = self.entry_table.get()
             try:
                 num_records = int(self.entry_count.get())
                 self.output_area.delete(1.0, tk.END)  # Очистка текстового поля перед выводом новой информации
                 for _ in range(num_records):
-                    name = fake.name()
-                    age = random.randint(25, 68)  # Возраст от 25 до 68
-                    insert_query = f"INSERT INTO {self.entry_table.get()} (name, age) VALUES (%s, %s)"
-                    cur.execute(insert_query, (name, age))
-                    self.output_area.insert(tk.END, f"Executed: {insert_query} with values ({name}, {age})\n")
+                    if table_name == 'users':
+                        name = fake.name()
+                        age = random.randint(25, 68)
+                        insert_query = f"INSERT INTO {table_name} (name, age) VALUES (%s, %s)"
+                        cur.execute(insert_query, (name, age))
+                    elif table_name == 'customers':
+                        customer_name = fake.name()
+                        email = fake.email()
+                        insert_query = f"INSERT INTO {table_name} (customer_name, email) VALUES (%s, %s)"
+                        cur.execute(insert_query, (customer_name, email))
+                    elif table_name == 'products':
+                        product_name = fake.word()
+                        price = round(random.uniform(10.0, 100.0), 2)
+                        insert_query = f"INSERT INTO {table_name} (product_name, price) VALUES (%s, %s)"
+                        cur.execute(insert_query, (product_name, price))
+                    elif table_name == 'orders':
+                        customer_id = random.randint(1, 10)  # Предположим, что у вас есть 10 покупателей
+                        total_amount = round(random.uniform(20.0, 500.0), 2)
+                        insert_query = f"INSERT INTO {table_name} (customer_id, total_amount) VALUES (%s, %s)"
+                        cur.execute(insert_query, (customer_id, total_amount))
+                    elif table_name == 'reviews':
+                        product_id = random.randint(1, 10)  # Предположим, что у вас есть 10 продуктов
+                        user_id = random.randint(1, 10)  # Предположим, что у вас есть 10 пользователей
+                        rating = random.randint(1, 5)
+                        comment = fake.sentence()
+                        insert_query = f"INSERT INTO {table_name} (product_id, user_id, rating, comment) VALUES (%s, %s, %s, %s)"
+                        cur.execute(insert_query, (product_id, user_id, rating, comment))
+                    self.output_area.insert(tk.END, f"Executed: {insert_query} with values...\n")
                 conn.commit()
-                self.output_area.insert(tk.END, f"Inserted {num_records} records successfully into {self.entry_table.get()}.\n")
+                self.output_area.insert(tk.END, f"Inserted {num_records} records successfully into {table_name}.\n")
             except ValueError:
                 self.output_area.insert(tk.END, "Please enter a valid number for records.\n")
             except Exception as e:
@@ -135,19 +172,28 @@ class DatabaseApp:
                 cur.close()
                 conn.close()
 
-    def update(self):
+    def update_records(self):
         conn = self.connect_db()
         if conn:
             cur = conn.cursor()
+            table_name = self.entry_table.get()
             try:
-                table_name = self.entry_table.get()
-                age_condition = random.randint(25, 68)  # Случайный возраст для условия обновления
-                update_query = f"UPDATE {table_name} SET age = age + 1 WHERE age = {age_condition}"
+                if table_name == 'users':
+                    age_condition = random.randint(25, 68)
+                    update_query = f"UPDATE {table_name} SET age = age + 1 WHERE age = {age_condition}"
+                elif table_name == 'customers':
+                    update_query = f"UPDATE {table_name} SET email = 'updated_email@example.com' WHERE customer_id = 1"  # Пример
+                elif table_name == 'products':
+                    update_query = f"UPDATE {table_name} SET price = price + 5 WHERE product_id = 1"  # Пример
+                elif table_name == 'orders':
+                    update_query = f"UPDATE {table_name} SET total_amount = total_amount + 10 WHERE order_id = 1"  # Пример
+                elif table_name == 'reviews':
+                    update_query = f"UPDATE {table_name} SET rating = 5 WHERE review_id = 1"  # Пример
+
                 self.output_area.delete(1.0, tk.END)  # Очистка текстового поля перед выводом новой информации
                 cur.execute(update_query)
                 conn.commit()
                 self.output_area.insert(tk.END, f"Executed: {update_query}\n")
-                self.output_area.insert(tk.END, f"Updated records in {table_name} where age = {age_condition}.\n")
             except Exception as e:
                 self.output_area.insert(tk.END, f"Error: {str(e)}\n")
             finally:
@@ -158,15 +204,24 @@ class DatabaseApp:
         conn = self.connect_db()
         if conn:
             cur = conn.cursor()
+            table_name = self.entry_table.get()
             try:
-                table_name = self.entry_table.get()
-                age_condition = random.randint(25, 68)  # Случайный возраст для условия удаления
-                delete_query = f"DELETE FROM {table_name} WHERE age = {age_condition}"
+                if table_name == 'users':
+                    age_condition = random.randint(25, 68)
+                    delete_query = f"DELETE FROM {table_name} WHERE age = {age_condition}"
+                elif table_name == 'customers':
+                    delete_query = f"DELETE FROM {table_name} WHERE customer_id = 1"  # Пример
+                elif table_name == 'products':
+                    delete_query = f"DELETE FROM {table_name} WHERE product_id = 1"  # Пример
+                elif table_name == 'orders':
+                    delete_query = f"DELETE FROM {table_name} WHERE order_id = 1"  # Пример
+                elif table_name == 'reviews':
+                    delete_query = f"DELETE FROM {table_name} WHERE review_id = 1"  # Пример
+
                 self.output_area.delete(1.0, tk.END)  # Очистка текстового поля перед выводом новой информации
                 cur.execute(delete_query)
                 conn.commit()
                 self.output_area.insert(tk.END, f"Executed: {delete_query}\n")
-                self.output_area.insert(tk.END, f"Deleted specific records from {table_name} where age = {age_condition}.\n")
             except Exception as e:
                 self.output_area.insert(tk.END, f"Error: {str(e)}\n")
             finally:
@@ -177,8 +232,8 @@ class DatabaseApp:
         conn = self.connect_db()
         if conn:
             cur = conn.cursor()
+            table_name = self.entry_table.get()
             try:
-                table_name = self.entry_table.get()
                 delete_query = f"DELETE FROM {table_name}"
                 self.output_area.delete(1.0, tk.END)  # Очистка текстового поля перед выводом новой информации
                 cur.execute(delete_query)
@@ -190,19 +245,6 @@ class DatabaseApp:
             finally:
                 cur.close()
                 conn.close()
-
-    def show_tables(self):
-        conn = self.connect_db()
-        if conn:
-            cur = conn.cursor()
-            self.output_area.delete(1.0, tk.END)  # Очистка текстового поля перед выводом новой информации
-            cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
-            tables = cur.fetchall()
-            self.output_area.insert(tk.END, "List of tables:\n")
-            for table in tables:
-                self.output_area.insert(tk.END, f"{table[0]}\n")
-            cur.close()
-            conn.close()
 
     def select_data(self):
         conn = self.connect_db()

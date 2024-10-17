@@ -58,3 +58,7 @@ CREATE TABLE reviews (
     rating INTEGER NOT NULL,              -- Оценка продукта (должна быть целым числом от 1 до 5)
     comment TEXT                          -- Комментарий к продукту
 );
+```
+# 52
+# SQL схема для проекта
+# 52

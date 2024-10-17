@@ -3,7 +3,7 @@
 
 
 
-
+SQL ''''
 -- Table for users
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -41,3 +41,4 @@ CREATE TABLE reviews (
     rating INTEGER CHECK (rating BETWEEN 1 AND 5),
     comment TEXT
 );
+''''

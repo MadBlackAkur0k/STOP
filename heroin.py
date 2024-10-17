@@ -3,6 +3,30 @@ from tkinter import scrolledtext, messagebox
 import psycopg2
 import random
 from faker import Faker
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+
+insert_logger = logging.getLogger("insert_logger")
+insert_handler = logging.FileHandler("insert.log")
+insert_handler.setLevel(logging.INFO)
+insert_logger.addHandler(insert_handler)
+
+update_logger = logging.getLogger("update_logger")
+update_handler = logging.FileHandler("update.log")
+update_handler.setLevel(logging.INFO)
+update_logger.addHandler(update_handler)
+
+delete_logger = logging.getLogger("delete_logger")
+delete_handler = logging.FileHandler("delete.log")
+delete_handler.setLevel(logging.INFO)
+delete_logger.addHandler(delete_handler)
+
+select_logger = logging.getLogger("select_logger")
+select_handler = logging.FileHandler("select.log")
+select_handler.setLevel(logging.INFO)
+select_logger.addHandler(select_handler)
 
 class DatabaseApp:
     def __init__(self, master):
@@ -139,21 +163,25 @@ class DatabaseApp:
                         age = random.randint(25, 68)
                         insert_query = f"INSERT INTO {table_name} (name, age) VALUES (%s, %s)"
                         cur.execute(insert_query, (name, age))
+                        insert_logger.info(f"Inserted into {table_name}: name={name}, age={age}")
                     elif table_name == 'customers':
                         customer_name = fake.name()
                         email = fake.email()
                         insert_query = f"INSERT INTO {table_name} (customer_name, email) VALUES (%s, %s)"
                         cur.execute(insert_query, (customer_name, email))
+                        insert_logger.info(f"Inserted into {table_name}: customer_name={customer_name}, email={email}")
                     elif table_name == 'products':
                         product_name = fake.word()
                         price = round(random.uniform(10.0, 100.0), 2)
                         insert_query = f"INSERT INTO {table_name} (product_name, price) VALUES (%s, %s)"
                         cur.execute(insert_query, (product_name, price))
+                        insert_logger.info(f"Inserted into {table_name}: product_name={product_name}, price={price}")
                     elif table_name == 'orders':
                         customer_id = random.randint(1, 10)  # Предположим, что у вас есть 10 покупателей
                         total_amount = round(random.uniform(20.0, 500.0), 2)
                         insert_query = f"INSERT INTO {table_name} (customer_id, total_amount) VALUES (%s, %s)"
                         cur.execute(insert_query, (customer_id, total_amount))
+                        insert_logger.info(f"Inserted into {table_name}: customer_id={customer_id}, total_amount={total_amount}")
                     elif table_name == 'reviews':
                         product_id = random.randint(1, 10)  # Предположим, что у вас есть 10 продуктов
                         user_id = random.randint(1, 10)  # Предположим, что у вас есть 10 пользователей
@@ -161,6 +189,7 @@ class DatabaseApp:
                         comment = fake.sentence()
                         insert_query = f"INSERT INTO {table_name} (product_id, user_id, rating, comment) VALUES (%s, %s, %s, %s)"
                         cur.execute(insert_query, (product_id, user_id, rating, comment))
+                        insert_logger.info(f"Inserted into {table_name}: product_id={product_id}, user_id={user_id}, rating={rating}, comment={comment}")
                     self.output_area.insert(tk.END, f"Executed: {insert_query} with values...\n")
                 conn.commit()
                 self.output_area.insert(tk.END, f"Inserted {num_records} records successfully into {table_name}.\n")
@@ -181,14 +210,19 @@ class DatabaseApp:
                 if table_name == 'users':
                     age_condition = random.randint(25, 68)
                     update_query = f"UPDATE {table_name} SET age = age + 1 WHERE age = {age_condition}"
+                    update_logger.info(f"Updated in {table_name}: age_condition={age_condition}")
                 elif table_name == 'customers':
                     update_query = f"UPDATE {table_name} SET email = 'updated_email@example.com' WHERE customer_id = 1"  # Пример
+                    update_logger.info(f"Updated in {table_name}: email updated for customer_id=1")
                 elif table_name == 'products':
                     update_query = f"UPDATE {table_name} SET price = price + 5 WHERE product_id = 1"  # Пример
+                    update_logger.info(f"Updated in {table_name}: price updated for product_id=1")
                 elif table_name == 'orders':
                     update_query = f"UPDATE {table_name} SET total_amount = total_amount + 10 WHERE order_id = 1"  # Пример
+                    update_logger.info(f"Updated in {table_name}: total_amount updated for order_id=1")
                 elif table_name == 'reviews':
                     update_query = f"UPDATE {table_name} SET rating = 5 WHERE review_id = 1"  # Пример
+                    update_logger.info(f"Updated in {table_name}: rating updated for review_id=1")
 
                 self.output_area.delete(1.0, tk.END)  # Очистка текстового поля перед выводом новой информации
                 cur.execute(update_query)
@@ -209,14 +243,19 @@ class DatabaseApp:
                 if table_name == 'users':
                     age_condition = random.randint(25, 68)
                     delete_query = f"DELETE FROM {table_name} WHERE age = {age_condition}"
+                    delete_logger.info(f"Deleted from {table_name}: age_condition={age_condition}")
                 elif table_name == 'customers':
                     delete_query = f"DELETE FROM {table_name} WHERE customer_id = 1"  # Пример
+                    delete_logger.info(f"Deleted from {table_name}: deleted customer_id=1")
                 elif table_name == 'products':
                     delete_query = f"DELETE FROM {table_name} WHERE product_id = 1"  # Пример
+                    delete_logger.info(f"Deleted from {table_name}: deleted product_id=1")
                 elif table_name == 'orders':
                     delete_query = f"DELETE FROM {table_name} WHERE order_id = 1"  # Пример
+                    delete_logger.info(f"Deleted from {table_name}: deleted order_id=1")
                 elif table_name == 'reviews':
                     delete_query = f"DELETE FROM {table_name} WHERE review_id = 1"  # Пример
+                    delete_logger.info(f"Deleted from {table_name}: deleted review_id=1")
 
                 self.output_area.delete(1.0, tk.END)  # Очистка текстового поля перед выводом новой информации
                 cur.execute(delete_query)
@@ -240,6 +279,7 @@ class DatabaseApp:
                 conn.commit()
                 self.output_area.insert(tk.END, f"Executed: {delete_query}\n")
                 self.output_area.insert(tk.END, f"Deleted all records from {table_name}.\n")
+                delete_logger.info(f"Deleted all records from {table_name}.")
             except Exception as e:
                 self.output_area.insert(tk.END, f"Error: {str(e)}\n")
             finally:
@@ -259,6 +299,7 @@ class DatabaseApp:
                 self.output_area.insert(tk.END, f"Executed: {select_query}\n")
                 for row in results:
                     self.output_area.insert(tk.END, f"{row}\n")
+                select_logger.info(f"Selected data from {table_name}.")
             except Exception as e:
                 self.output_area.insert(tk.END, f"Error: {str(e)}\n")
             finally:
